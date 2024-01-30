@@ -21,21 +21,21 @@ class AuthLoginParam(AuthSchemaBase):
 
 class RegisterUserParam(AuthSchemaBase):
     nickname: str | None = None
-    email: EmailStr = Field(..., example='user@example.com')
+    email: EmailStr = Field(..., example="user@example.com")
 
 
 class AddUserParam(AuthSchemaBase):
     dept_id: int
     roles: list[int]
     nickname: str | None = None
-    email: EmailStr = Field(..., example='user@example.com')
+    email: EmailStr = Field(..., example="user@example.com")
 
 
 class UserInfoSchemaBase(SchemaBase):
     dept_id: int | None = None
     username: str
     nickname: str
-    email: EmailStr = Field(..., example='user@example.com')
+    email: EmailStr = Field(..., example="user@example.com")
     phone: CustomPhoneNumber | None = None
 
 
@@ -48,7 +48,7 @@ class UpdateUserRoleParam(SchemaBase):
 
 
 class AvatarParam(SchemaBase):
-    url: HttpUrl = Field(..., description='头像 http 地址')
+    url: HttpUrl = Field(..., description="프로필 사진 http 주소")
 
 
 class GetUserInfoNoRelationDetail(UserInfoSchemaBase):
@@ -79,9 +79,9 @@ class GetCurrentUserInfoDetail(GetUserInfoListDetails):
     dept: GetDeptListDetails | str | None = None
     roles: list[GetRoleListDetails] | list[str] | None = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def handel(self, values):
-        """处理部门和角色"""
+        """부서와 역할 처리"""
         dept = self.dept
         if dept:
             self.dept = dept.name  # type: ignore

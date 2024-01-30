@@ -15,19 +15,19 @@ from backend.app.common.log import log
 class AESCipher:
     def __init__(self, key: bytes | str):
         """
-        :param key: 密钥，16/24/32 bytes 或 16 进制字符串
+        :param key: 키, 16/24/32 바이트 또는 16진수 문자열
         """
         self.key = key if isinstance(key, bytes) else bytes.fromhex(key)
 
     def encrypt(self, plaintext: bytes | str) -> bytes:
         """
-        AES 加密
+        AES 암호화
 
-        :param plaintext: 加密前的明文
+        :param plaintext: 암호화되기 전 평문
         :return:
         """
         if not isinstance(plaintext, bytes):
-            plaintext = str(plaintext).encode('utf-8')
+            plaintext = str(plaintext).encode("utf-8")
         iv = os.urandom(16)
         cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv), backend=backend)
         encryptor = cipher.encryptor()
@@ -38,12 +38,14 @@ class AESCipher:
 
     def decrypt(self, ciphertext: bytes | str) -> str:
         """
-        AES 解密
+        AES 복호화
 
-        :param ciphertext: 解密前的密文, bytes 或 16 进制字符串
+        :param ciphertext: 복호화되기 전 암호문, 바이트 또는 16진수 문자열
         :return:
         """
-        ciphertext = ciphertext if isinstance(ciphertext, bytes) else bytes.fromhex(ciphertext)
+        ciphertext = (
+            ciphertext if isinstance(ciphertext, bytes) else bytes.fromhex(ciphertext)
+        )
         iv = ciphertext[:16]
         ciphertext = ciphertext[16:]
         cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv), backend=backend)
@@ -51,23 +53,23 @@ class AESCipher:
         unpadder = padding.PKCS7(cipher.algorithm.block_size).unpadder()  # type: ignore
         padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
         plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
-        return plaintext.decode('utf-8')
+        return plaintext.decode("utf-8")
 
 
 class Md5Cipher:
     @staticmethod
     def encrypt(plaintext: bytes | str) -> str:
         """
-        MD5 加密
+        MD5 암호화
 
-        :param plaintext: 加密前的明文
+        :param plaintext: 암호화되기 전 평문
         :return:
         """
         import hashlib
 
         md5 = hashlib.md5()
         if not isinstance(plaintext, bytes):
-            plaintext = str(plaintext).encode('utf-8')
+            plaintext = str(plaintext).encode("utf-8")
         md5.update(plaintext)
         return md5.hexdigest()
 
@@ -75,36 +77,36 @@ class Md5Cipher:
 class ItsDCipher:
     def __init__(self, key: bytes | str):
         """
-        :param key: 密钥，16/24/32 bytes 或 16 进制字符串
+        :param key: 키, 16/24/32 바이트 또는 16진수 문자열
         """
         self.key = key if isinstance(key, bytes) else bytes.fromhex(key)
 
     def encrypt(self, plaintext: Any) -> str:
         """
-        ItsDangerous 加密 (可能失败，如果 plaintext 无法序列化，则会加密为 MD5)
+        ItsDangerous 암호화 (실패할 수 있으며, plaintext가 직렬화할 수 없는 경우 MD5로 암호화됨)
 
-        :param plaintext: 加密前的明文
+        :param plaintext: 암호화되기 전 평문
         :return:
         """
         serializer = URLSafeSerializer(self.key)
         try:
             ciphertext = serializer.dumps(plaintext)
         except Exception as e:
-            log.error(f'ItsDangerous encrypt failed: {e}')
+            log.error(f"ItsDangerous encrypt failed: {e}")
             ciphertext = Md5Cipher.encrypt(plaintext)
         return ciphertext
 
     def decrypt(self, ciphertext: str) -> Any:
         """
-        ItsDangerous 解密 (可能失败，如果 ciphertext 无法反序列化，则解密失败, 返回原始密文)
+        ItsDangerous 복호화 (실패할 수 있으며, ciphertext를 역직렬화할 수 없는 경우 복호화 실패, 원래의 암호문 반환)
 
-        :param ciphertext: 解密前的密文
+        :param ciphertext: 복호화되기 전 암호문
         :return:
         """
         serializer = URLSafeSerializer(self.key)
         try:
             plaintext = serializer.loads(ciphertext)
         except Exception as e:
-            log.error(f'ItsDangerous decrypt failed: {e}')
+            log.error(f"ItsDangerous decrypt failed: {e}")
             plaintext = ciphertext
         return plaintext

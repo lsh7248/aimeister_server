@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
-sys.path.append('../../')
+sys.path.append("../../")
 
 from typing import Dict, Generator
 
@@ -19,16 +19,18 @@ app.dependency_overrides[get_db] = override_get_db
 
 
 # Test user
-PYTEST_USERNAME = 'admin'
-PYTEST_PASSWORD = '123456'
+PYTEST_USERNAME = "admin"
+PYTEST_PASSWORD = "123456"
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def client() -> Generator:
     with TestClient(app) as c:
         yield c
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def token_headers(client: TestClient) -> Dict[str, str]:
-    return get_token_headers(client=client, username=PYTEST_USERNAME, password=PYTEST_PASSWORD)
+    return get_token_headers(
+        client=client, username=PYTEST_USERNAME, password=PYTEST_PASSWORD
+    )

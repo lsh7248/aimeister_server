@@ -9,7 +9,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-sys.path.append('../../')
+sys.path.append("../../")
 
 from backend.app.core import path_conf  # noqa: E402
 
@@ -33,11 +33,11 @@ target_metadata = MappedBase.metadata
 # other values from the config, defined by the needs of env.py,
 from backend.app.database.db_mysql import SQLALCHEMY_DATABASE_URL  # noqa: E402
 
-config.set_main_option('sqlalchemy.url', SQLALCHEMY_DATABASE_URL)
+config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 
 
 def include_name(name, type_, parent_names):
-    if type_ == 'table':
+    if type_ == "table":
         return name in target_metadata.tables
     else:
         return True
@@ -55,12 +55,12 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option('sqlalchemy.url')
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={'paramstyle': 'named'},
+        dialect_opts={"paramstyle": "named"},
         include_name=include_name,
     )
 
@@ -89,7 +89,7 @@ async def run_migrations_online():
     connectable = AsyncEngine(
         engine_from_config(
             config.get_section(config.config_ini_section),
-            prefix='sqlalchemy.',
+            prefix="sqlalchemy.",
             poolclass=pool.NullPool,
             future=True,
         )

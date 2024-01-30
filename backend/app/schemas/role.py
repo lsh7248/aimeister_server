@@ -12,7 +12,8 @@ from backend.app.schemas.menu import GetMenuListDetails
 class RoleSchemaBase(SchemaBase):
     name: str
     data_scope: RoleDataScopeType = Field(
-        default=RoleDataScopeType.custom, description='权限范围（1：全部数据权限 2：自定义数据权限）'
+        default=RoleDataScopeType.custom,
+        description="권한 범위 (1 : 전체 데이터 권한, 2 : 사용자 정의 데이터 권한)",
     )
     status: StatusType = Field(default=StatusType.enable)
     remark: str | None = None

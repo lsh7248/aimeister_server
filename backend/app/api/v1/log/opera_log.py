@@ -16,9 +16,27 @@ from backend.app.services.opera_log_service import opera_log_service
 router = APIRouter()
 
 
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
+
+from backend.app.common.jwt import DependsJwtAuth
+from backend.app.common.pagination import DependsPagination, paging_data
+from backend.app.common.permission import RequestPermission
+from backend.app.common.rbac import DependsRBAC
+from backend.app.common.response.response_schema import ResponseModel, response_base
+from backend.app.database.db_mysql import CurrentSession
+from backend.app.schemas.opera_log import GetOperaLogListDetails
+from backend.app.services.opera_log_service import opera_log_service
+
+router = APIRouter()
+
+
 @router.get(
-    '',
-    summary='（模糊条件）分页获取操作日志',
+    "",
+    summary="（희미한 조건）페이징하여 작업 로그 얻기",
     dependencies=[
         DependsJwtAuth,
         DependsPagination,
@@ -30,16 +48,18 @@ async def get_pagination_opera_logs(
     status: Annotated[int | None, Query()] = None,
     ip: Annotated[str | None, Query()] = None,
 ) -> ResponseModel:
-    log_select = await opera_log_service.get_select(username=username, status=status, ip=ip)
+    log_select = await opera_log_service.get_select(
+        username=username, status=status, ip=ip
+    )
     page_data = await paging_data(db, log_select, GetOperaLogListDetails)
     return await response_base.success(data=page_data)
 
 
 @router.delete(
-    '',
-    summary='（批量）删除操作日志',
+    "",
+    summary="（일괄적으로）작업 로그 삭제",
     dependencies=[
-        Depends(RequestPermission('log:opera:del')),
+        Depends(RequestPermission("log:opera:del")),
         DependsRBAC,
     ],
 )
@@ -51,10 +71,10 @@ async def delete_opera_log(pk: Annotated[list[int], Query(...)]) -> ResponseMode
 
 
 @router.delete(
-    '/all',
-    summary='清空操作日志',
+    "/all",
+    summary="작업 로그 초기화",
     dependencies=[
-        Depends(RequestPermission('log:opera:empty')),
+        Depends(RequestPermission("log:opera:empty")),
         DependsRBAC,
     ],
 )

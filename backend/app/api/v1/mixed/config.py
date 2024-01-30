@@ -11,10 +11,10 @@ router = APIRouter()
 
 
 @router.get(
-    '/routes',
-    summary='获取所有路由',
+    "/routes",
+    summary="모든 경로 가져오기",
     dependencies=[
-        Depends(RequestPermission('sys:route:list')),
+        Depends(RequestPermission("sys:route:list")),
         DependsRBAC,
     ],
 )
@@ -24,10 +24,10 @@ async def get_all_route(request: Request) -> ResponseModel:
         if isinstance(route, APIRoute):
             data.append(
                 {
-                    'path': route.path,
-                    'name': route.name,
-                    'summary': route.summary,
-                    'methods': route.methods,
+                    "path": route.path,
+                    "name": route.name,
+                    "summary": route.summary,
+                    "methods": route.methods,
                 }
             )
-    return await response_base.success(data={'route_list': data})
+    return await response_base.success(data={"route_list": data})

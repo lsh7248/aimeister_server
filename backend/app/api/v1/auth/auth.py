@@ -17,25 +17,31 @@ router = APIRouter()
 
 
 @router.post(
-    '/swagger_login',
-    summary='swagger 表单登录',
-    description='form 格式登录，用于 swagger 文档调试以及获取 JWT Auth',
+    "/swagger_login",
+    summary="swagger 폼 로그인",
+    description="폼 형식으로 로그인, swagger 문서 디버깅 및 JWT 인증키 얻기에 사용됨",
     deprecated=True,
 )
-async def swagger_user_login(form_data: OAuth2PasswordRequestForm = Depends()) -> GetSwaggerToken:
+async def swagger_user_login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+) -> GetSwaggerToken:
     token, user = await auth_service.swagger_login(form_data=form_data)
     return GetSwaggerToken(access_token=token, user=user)  # type: ignore
 
 
 @router.post(
-    '/login',
-    summary='用户登录',
-    description='json 格式登录, 仅支持在第三方api工具调试, 例如: postman',
+    "/login",
+    summary="사용자 로그인",
+    description="json 형식으로 로그인, 제3자 API 도구 디버깅에만 지원됨, 예: postman",
     dependencies=[Depends(RateLimiter(times=5, minutes=1))],
 )
-async def user_login(request: Request, obj: AuthLoginParam, background_tasks: BackgroundTasks) -> ResponseModel:
-    access_token, refresh_token, access_expire, refresh_expire, user = await auth_service.login(
-        request=request, obj=obj, background_tasks=background_tasks
+async def user_login(
+    request: Request, obj: AuthLoginParam, background_tasks: BackgroundTasks
+) -> ResponseModel:
+    access_token, refresh_token, access_expire, refresh_expire, user = (
+        await auth_service.login(
+            request=request, obj=obj, background_tasks=background_tasks
+        )
     )
     data = GetLoginToken(
         access_token=access_token,
@@ -47,8 +53,10 @@ async def user_login(request: Request, obj: AuthLoginParam, background_tasks: Ba
     return await response_base.success(data=data)
 
 
-@router.post('/new_token', summary='创建新 token', dependencies=[DependsJwtAuth])
-async def create_new_token(request: Request, refresh_token: Annotated[str, Query(...)]) -> ResponseModel:
+@router.post("/new_token", summary="새 토큰 생성", dependencies=[DependsJwtAuth])
+async def create_new_token(
+    request: Request, refresh_token: Annotated[str, Query(...)]
+) -> ResponseModel:
     (
         new_access_token,
         new_refresh_token,
@@ -64,7 +72,7 @@ async def create_new_token(request: Request, refresh_token: Annotated[str, Query
     return await response_base.success(data=data)
 
 
-@router.post('/logout', summary='用户登出', dependencies=[DependsJwtAuth])
+@router.post("/logout", summary="사용자 로그아웃", dependencies=[DependsJwtAuth])
 async def user_logout(request: Request) -> ResponseModel:
     await auth_service.logout(request=request)
     return await response_base.success()

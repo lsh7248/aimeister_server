@@ -17,37 +17,37 @@ class RedisCli(Redis):
             password=settings.REDIS_PASSWORD,
             db=settings.REDIS_DATABASE,
             socket_timeout=settings.REDIS_TIMEOUT,
-            decode_responses=True,  # 转码 utf-8
+            decode_responses=True,  # 인코딩 utf-8
         )
 
     async def open(self):
         """
-        触发初始化连接
+        초기화 연결을 트리거합니다.
 
         :return:
         """
         try:
             await self.ping()
         except TimeoutError:
-            log.error('❌ 数据库 redis 连接超时')
+            log.error("❌ 데이터베이스 redis 연결 시간 초과")
             sys.exit()
         except AuthenticationError:
-            log.error('❌ 数据库 redis 连接认证失败')
+            log.error("❌ 데이터베이스 redis 인증 실패")
             sys.exit()
         except Exception as e:
-            log.error('❌ 数据库 redis 连接异常 {}', e)
+            log.error("❌ 데이터베이스 redis 연결 오류 {}", e)
             sys.exit()
 
     async def delete_prefix(self, prefix: str, exclude: str | list = None):
         """
-        删除指定前缀的所有key
+        지정된 접두사의 모든 키를 삭제합니다.
 
         :param prefix:
         :param exclude:
         :return:
         """
         keys = []
-        async for key in self.scan_iter(match=f'{prefix}*'):
+        async for key in self.scan_iter(match=f"{prefix}*"):
             if isinstance(exclude, str):
                 if key != exclude:
                     keys.append(key)
@@ -60,5 +60,5 @@ class RedisCli(Redis):
             await self.delete(key)
 
 
-# 创建redis连接对象
+# redis 연결 객체 생성
 redis_client = RedisCli()

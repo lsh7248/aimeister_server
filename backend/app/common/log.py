@@ -23,26 +23,30 @@ class Logger:
         if not os.path.exists(self.log_path):
             os.mkdir(self.log_path)
 
-        # 日志文件
+        # 로그 파일
         log_stdout_file = os.path.join(self.log_path, settings.LOG_STDOUT_FILENAME)
         log_stderr_file = os.path.join(self.log_path, settings.LOG_STDERR_FILENAME)
 
-        # loguru 日志: https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.add
-        log_config = dict(rotation='10 MB', retention='15 days', compression='tar.gz', enqueue=True)
-        # stdout
+        # loguru 로그: https://loguru.readthedocs.io/en/stable/api/logger.html#loguru._logger.Logger.add
+        log_config = dict(
+            rotation="10 MB", retention="15 days", compression="tar.gz", enqueue=True
+        )
+        # 표준 출력
         logger.add(
             log_stdout_file,
-            level='INFO',
-            filter=lambda record: record['level'].name == 'INFO' or record['level'].no <= 25,
+            level="INFO",
+            filter=lambda record: record["level"].name == "INFO"
+            or record["level"].no <= 25,
             **log_config,
             backtrace=False,
             diagnose=False,
         )
-        # stderr
+        # 표준 에러
         logger.add(
             log_stderr_file,
-            level='ERROR',
-            filter=lambda record: record['level'].name == 'ERROR' or record['level'].no >= 30,
+            level="ERROR",
+            filter=lambda record: record["level"].name == "ERROR"
+            or record["level"].no >= 30,
             **log_config,
             backtrace=True,
             diagnose=True,

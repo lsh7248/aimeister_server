@@ -4,42 +4,42 @@ from celery import Celery
 
 from backend.app.core.conf import settings
 
-__all__ = ['celery_app']
+__all__ = ["celery_app"]
 
 
 def make_celery(main_name: str) -> Celery:
     """
-    创建 celery 应用
+    celery 애플리케이션 생성
 
-    :param main_name: __main__ module name
+    :param main_name: __main__ 모듈 이름
     :return:
     """
     app = Celery(main_name)
-    app.autodiscover_tasks(packages=['backend.app'])
+    app.autodiscover_tasks(packages=["backend.app"])
 
     # Celery Config
     # https://docs.celeryq.dev/en/stable/userguide/configuration.html
     app.conf.broker_url = (
         (
-            f'redis://:{settings.CELERY_REDIS_PASSWORD}@{settings.CELERY_REDIS_HOST}:'
-            f'{settings.CELERY_REDIS_PORT}/{settings.CELERY_BROKER_REDIS_DATABASE}'
+            f"redis://:{settings.CELERY_REDIS_PASSWORD}@{settings.CELERY_REDIS_HOST}:"
+            f"{settings.CELERY_REDIS_PORT}/{settings.CELERY_BROKER_REDIS_DATABASE}"
         )
-        if settings.CELERY_BROKER == 'redis'
+        if settings.CELERY_BROKER == "redis"
         else (
-            f'amqp://{settings.RABBITMQ_USERNAME}:{settings.RABBITMQ_PASSWORD}@{settings.RABBITMQ_HOST}:'
-            f'{settings.RABBITMQ_PORT}'
+            f"amqp://{settings.RABBITMQ_USERNAME}:{settings.RABBITMQ_PASSWORD}@{settings.RABBITMQ_HOST}:"
+            f"{settings.RABBITMQ_PORT}"
         )
     )
     app.conf.result_backend = (
-        f'redis://:{settings.CELERY_REDIS_PASSWORD}@{settings.CELERY_REDIS_HOST}:'
-        f'{settings.CELERY_REDIS_PORT}/{settings.CELERY_BACKEND_REDIS_DATABASE}'
+        f"redis://:{settings.CELERY_REDIS_PASSWORD}@{settings.CELERY_REDIS_HOST}:"
+        f"{settings.CELERY_REDIS_PORT}/{settings.CELERY_BACKEND_REDIS_DATABASE}"
     )
     app.conf.result_backend_transport_options = {
-        'global_keyprefix': settings.CELERY_BACKEND_REDIS_PREFIX,
-        'retry_policy': {
-            'timeout': settings.CELERY_BACKEND_REDIS_TIMEOUT,
+        "global_keyprefix": settings.CELERY_BACKEND_REDIS_PREFIX,
+        "retry_policy": {
+            "timeout": settings.CELERY_BACKEND_REDIS_TIMEOUT,
         },
-        'result_chord_ordered': settings.CELERY_BACKEND_REDIS_ORDERED,
+        "result_chord_ordered": settings.CELERY_BACKEND_REDIS_ORDERED,
     }
     app.conf.timezone = settings.DATETIME_TIMEZONE
     app.conf.task_track_started = True
@@ -52,4 +52,4 @@ def make_celery(main_name: str) -> Celery:
     return app
 
 
-celery_app = make_celery('celery_app')
+celery_app = make_celery("celery_app")

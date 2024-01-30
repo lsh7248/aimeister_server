@@ -9,7 +9,9 @@ from backend.app.schemas.opera_log import CreateOperaLogParam
 
 class OperaLogService:
     @staticmethod
-    async def get_select(*, username: str | None = None, status: int | None = None, ip: str | None = None) -> Select:
+    async def get_select(
+        *, username: str | None = None, status: int | None = None, ip: str | None = None
+    ) -> Select:
         return await opera_log_dao.get_all(username=username, status=status, ip=ip)
 
     @staticmethod

@@ -20,7 +20,13 @@ class LoginLogService:
 
     @staticmethod
     async def create(
-        *, db: AsyncSession, request: Request, user: User, login_time: datetime, status: int, msg: str
+        *,
+        db: AsyncSession,
+        request: Request,
+        user: User,
+        login_time: datetime,
+        status: int,
+        msg: str,
     ) -> None:
         try:
             # request.state 来自 opera log 中间件定义的扩展参数，详见 opera_log_middleware.py
@@ -41,7 +47,7 @@ class LoginLogService:
             )
             await login_log_dao.create(db, obj_in)
         except Exception as e:
-            log.exception(f'登录日志创建失败: {e}')
+            log.exception(f"로그인 로그 생성 실패: {e}")
 
     @staticmethod
     async def delete(*, pk: list[int]) -> int:

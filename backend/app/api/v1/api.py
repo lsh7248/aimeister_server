@@ -16,21 +16,23 @@ from backend.app.services.api_service import api_service
 router = APIRouter()
 
 
-@router.get('/all', summary='获取所有接口', dependencies=[DependsJwtAuth])
+@router.get("/all", summary="모든 인터페이스 가져 오기", dependencies=[DependsJwtAuth])
 async def get_all_apis() -> ResponseModel:
     data = await api_service.get_api_list()
     return await response_base.success(data=data)
 
 
-@router.get('/{pk}', summary='获取接口详情', dependencies=[DependsJwtAuth])
+@router.get(
+    "/{pk}", summary="인터페이스 세부 정보 가져 오기", dependencies=[DependsJwtAuth]
+)
 async def get_api(pk: Annotated[int, Path(...)]) -> ResponseModel:
     api = await api_service.get(pk=pk)
     return await response_base.success(data=api)
 
 
 @router.get(
-    '',
-    summary='（模糊条件）分页获取所有接口',
+    "",
+    summary="(모호한 조건) 페이징을 사용하여 모든 인터페이스 가져 오기",
     dependencies=[
         DependsJwtAuth,
         DependsPagination,
@@ -48,10 +50,10 @@ async def get_pagination_apis(
 
 
 @router.post(
-    '',
-    summary='创建接口',
+    "",
+    summary="인터페이스 생성",
     dependencies=[
-        Depends(RequestPermission('sys:api:add')),
+        Depends(RequestPermission("sys:api:add")),
         DependsRBAC,
     ],
 )
@@ -61,14 +63,16 @@ async def create_api(obj: CreateApiParam) -> ResponseModel:
 
 
 @router.put(
-    '/{pk}',
-    summary='更新接口',
+    "/{pk}",
+    summary="인터페이스 업데이트",
     dependencies=[
-        Depends(RequestPermission('sys:api:edit')),
+        Depends(RequestPermission("sys:api:edit")),
         DependsRBAC,
     ],
 )
-async def update_api(pk: Annotated[int, Path(...)], obj: UpdateApiParam) -> ResponseModel:
+async def update_api(
+    pk: Annotated[int, Path(...)], obj: UpdateApiParam
+) -> ResponseModel:
     count = await api_service.update(pk=pk, obj=obj)
     if count > 0:
         return await response_base.success()
@@ -76,10 +80,10 @@ async def update_api(pk: Annotated[int, Path(...)], obj: UpdateApiParam) -> Resp
 
 
 @router.delete(
-    '',
-    summary='（批量）删除接口',
+    "",
+    summary="(배치) 인터페이스 삭제",
     dependencies=[
-        Depends(RequestPermission('sys:api:del')),
+        Depends(RequestPermission("sys:api:del")),
         DependsRBAC,
     ],
 )

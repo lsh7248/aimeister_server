@@ -16,27 +16,31 @@ from backend.app.models.base import MappedBase
 
 def create_engine_and_session(url: str | URL):
     try:
-        # 数据库引擎
-        engine = create_async_engine(url, echo=settings.DB_ECHO, future=True, pool_pre_ping=True)
-        # log.success('数据库连接成功')
+        # 데이터베이스 엔진
+        engine = create_async_engine(
+            url, echo=settings.DB_ECHO, future=True, pool_pre_ping=True
+        )
+        # log.success('데이터베이스 연결 성공')
     except Exception as e:
-        log.error('❌ 数据库链接失败 {}', e)
+        log.error("❌ 데이터베이스 연결 실패 {}", e)
         sys.exit()
     else:
-        db_session = async_sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+        db_session = async_sessionmaker(
+            bind=engine, autoflush=False, expire_on_commit=False
+        )
         return engine, db_session
 
 
 SQLALCHEMY_DATABASE_URL = (
-    f'mysql+asyncmy://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:'
-    f'{settings.DB_PORT}/{settings.DB_DATABASE}?charset={settings.DB_CHARSET}'
+    f"mysql+asyncmy://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:"
+    f"{settings.DB_PORT}/{settings.DB_DATABASE}?charset={settings.DB_CHARSET}"
 )
 
 async_engine, async_db_session = create_engine_and_session(SQLALCHEMY_DATABASE_URL)
 
 
 async def get_db() -> AsyncSession:
-    """session 生成器"""
+    """세션 생성기"""
     session = async_db_session()
     try:
         yield session
@@ -52,11 +56,11 @@ CurrentSession = Annotated[AsyncSession, Depends(get_db)]
 
 
 async def create_table():
-    """创建数据库表"""
+    """데이터베이스 테이블 생성"""
     async with async_engine.begin() as coon:
         await coon.run_sync(MappedBase.metadata.create_all)
 
 
 def uuid4_str() -> str:
-    """数据库引擎 UUID 类型兼容性解决方案"""
+    """데이터베이스 엔진 UUID 타입 호환성 해결책"""
     return str(uuid4())

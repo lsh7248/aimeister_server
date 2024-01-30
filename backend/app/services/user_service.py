@@ -30,14 +30,18 @@ class UserService:
         async with async_db_session.begin() as db:
             username = await user_dao.get_by_username(db, obj.username)
             if username:
-                raise errors.ForbiddenError(msg='该用户名已注册')
-            obj.nickname = obj.nickname if obj.nickname else f'用户{random.randrange(10000, 99999)}'
+                raise errors.ForbiddenError(msg="해당 사용자 이름은 이미 등록되었습니다")
+            obj.nickname = (
+                obj.nickname
+                if obj.nickname
+                else f"사용자{random.randrange(10000, 99999)}"
+            )
             nickname = await user_dao.get_by_nickname(db, obj.nickname)
             if nickname:
-                raise errors.ForbiddenError(msg='昵称已注册')
+                raise errors.ForbiddenError(msg="닉네임은 이미 등록되었습니다")
             email = await user_dao.check_email(db, obj.email)
             if email:
-                raise errors.ForbiddenError(msg='该邮箱已注册')
+                raise errors.ForbiddenError(msg="해당 이메일은 이미 등록되었습니다")
             await user_dao.create(db, obj)
 
     @staticmethod
@@ -46,21 +50,25 @@ class UserService:
             await superuser_verify(request)
             username = await user_dao.get_by_username(db, obj.username)
             if username:
-                raise errors.ForbiddenError(msg='此用户名已注册')
-            obj.nickname = obj.nickname if obj.nickname else f'用户{random.randrange(10000, 99999)}'
+                raise errors.ForbiddenError(msg="해당 사용자 이름은 이미 등록되었습니다")
+            obj.nickname = (
+                obj.nickname
+                if obj.nickname
+                else f"사용자{random.randrange(10000, 99999)}"
+            )
             nickname = await user_dao.get_by_nickname(db, obj.nickname)
             if nickname:
-                raise errors.ForbiddenError(msg='昵称已注册')
+                raise errors.ForbiddenError(msg="닉네임은 이미 등록되었습니다")
             dept = await dept_dao.get(db, obj.dept_id)
             if not dept:
-                raise errors.NotFoundError(msg='部门不存在')
+                raise errors.NotFoundError(msg="부서가 존재하지 않습니다")
             for role_id in obj.roles:
                 role = await role_dao.get(db, role_id)
                 if not role:
-                    raise errors.NotFoundError(msg='角色不存在')
+                    raise errors.NotFoundError(msg="역할이 존재하지 않습니다")
             email = await user_dao.check_email(db, obj.email)
             if email:
-                raise errors.ForbiddenError(msg='该邮箱已注册')
+                raise errors.ForbiddenError(msg="해당 이메일은 이미 등록되었습니다")
             await user_dao.add(db, obj)
 
     @staticmethod
@@ -68,15 +76,17 @@ class UserService:
         async with async_db_session.begin() as db:
             op = obj.old_password
             if not await password_verify(op + request.user.salt, request.user.password):
-                raise errors.ForbiddenError(msg='旧密码错误')
+                raise errors.ForbiddenError(msg="기존 비밀번호가 잘못되었습니다")
             np1 = obj.new_password
             np2 = obj.confirm_password
             if np1 != np2:
-                raise errors.ForbiddenError(msg='两次密码输入不一致')
-            count = await user_dao.reset_password(db, request.user.id, obj.new_password, request.user.salt)
+                raise errors.ForbiddenError(msg="두 비밀번호가 일치하지 않습니다")
+            count = await user_dao.reset_password(
+                db, request.user.id, obj.new_password, request.user.salt
+            )
             prefix = [
-                f'{settings.TOKEN_REDIS_PREFIX}:{request.user.id}:',
-                f'{settings.TOKEN_REFRESH_REDIS_PREFIX}:{request.user.id}:',
+                f"{settings.TOKEN_REDIS_PREFIX}:{request.user.id}:",
+                f"{settings.TOKEN_REFRESH_REDIS_PREFIX}:{request.user.id}:",
             ]
             for i in prefix:
                 await redis_client.delete_prefix(i)
@@ -87,7 +97,7 @@ class UserService:
         async with async_db_session() as db:
             user = await user_dao.get_with_relation(db, username=username)
             if not user:
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             return user
 
     @staticmethod
@@ -95,66 +105,76 @@ class UserService:
         async with async_db_session.begin() as db:
             if not request.user.is_superuser:
                 if request.user.username != username:
-                    raise errors.ForbiddenError(msg='你只能修改自己的信息')
+                    raise errors.ForbiddenError(msg="자신의 정보만 수정할 수 있습니다")
             input_user = await user_dao.get_with_relation(db, username=username)
             if not input_user:
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             if input_user.username != obj.username:
                 _username = await user_dao.get_by_username(db, obj.username)
                 if _username:
-                    raise errors.ForbiddenError(msg='该用户名已存在')
+                    raise errors.ForbiddenError(msg="해당 사용자 이름은 이미 존재합니다")
             if input_user.nickname != obj.nickname:
                 nickname = await user_dao.get_by_nickname(db, obj.nickname)
                 if nickname:
-                    raise errors.ForbiddenError(msg='改昵称已存在')
+                    raise errors.ForbiddenError(msg="해당 닉네임은 이미 존재합니다")
             if input_user.email != obj.email:
                 email = await user_dao.check_email(db, obj.email)
                 if email:
-                    raise errors.ForbiddenError(msg='该邮箱已注册')
+                    raise errors.ForbiddenError(msg="해당 이메일은 이미 등록되었습니다")
             count = await user_dao.update_userinfo(db, input_user, obj)
             return count
 
     @staticmethod
-    async def update_roles(*, request: Request, username: str, obj: UpdateUserRoleParam) -> None:
+    async def update_roles(
+        *, request: Request, username: str, obj: UpdateUserRoleParam
+    ) -> None:
         async with async_db_session.begin() as db:
             if not request.user.is_superuser:
                 if request.user.username != username:
-                    raise errors.ForbiddenError(msg='你只能修改自己的角色')
+                    raise errors.ForbiddenError(msg="자신의 역할만 수정할 수 있습니다")
             input_user = await user_dao.get_with_relation(db, username=username)
             if not input_user:
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             for role_id in obj.roles:
                 role = await role_dao.get(db, role_id)
                 if not role:
-                    raise errors.NotFoundError(msg='角色不存在')
+                    raise errors.NotFoundError(msg="역할이 존재하지 않습니다")
             await user_dao.update_role(db, input_user, obj)
-            await redis_client.delete_prefix(f'{settings.PERMISSION_REDIS_PREFIX}:{request.user.uuid}')
+            await redis_client.delete_prefix(
+                f"{settings.PERMISSION_REDIS_PREFIX}:{request.user.uuid}"
+            )
 
     @staticmethod
-    async def update_avatar(*, request: Request, username: str, avatar: AvatarParam) -> int:
+    async def update_avatar(
+        *, request: Request, username: str, avatar: AvatarParam
+    ) -> int:
         async with async_db_session.begin() as db:
             if not request.user.is_superuser:
                 if request.user.username != username:
-                    raise errors.ForbiddenError(msg='你只能修改自己的头像')
+                    raise errors.ForbiddenError(msg="자신의 아바타만 수정할 수 있습니다")
             input_user = await user_dao.get_by_username(db, username)
             if not input_user:
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             count = await user_dao.update_avatar(db, input_user, avatar)
             return count
 
     @staticmethod
-    async def get_select(*, dept: int, username: str = None, phone: str = None, status: int = None) -> Select:
-        return await user_dao.get_all(dept=dept, username=username, phone=phone, status=status)
+    async def get_select(
+        *, dept: int, username: str = None, phone: str = None, status: int = None
+    ) -> Select:
+        return await user_dao.get_all(
+            dept=dept, username=username, phone=phone, status=status
+        )
 
     @staticmethod
     async def update_permission(*, request: Request, pk: int) -> int:
         async with async_db_session.begin() as db:
             await superuser_verify(request)
             if not await user_dao.get(db, pk):
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             else:
                 if pk == request.user.id:
-                    raise errors.ForbiddenError(msg='禁止修改自身管理员权限')
+                    raise errors.ForbiddenError(msg="자체 관리자 권한을 수정할 수 없습니다")
                 count = await user_dao.set_super(db, pk)
                 return count
 
@@ -163,22 +183,25 @@ class UserService:
         async with async_db_session.begin() as db:
             await superuser_verify(request)
             if not await user_dao.get(db, pk):
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             else:
                 if pk == request.user.id:
-                    raise errors.ForbiddenError(msg='禁止修改自身后台管理登陆权限')
+                    raise errors.ForbiddenError(msg="자체 백엔드 관리 로그인 권한을 수정할 수 없습니다")
                 count = await user_dao.set_staff(db, pk)
                 return count
 
     @staticmethod
     async def update_status(*, request: Request, pk: int) -> int:
+        """
+        pk: user_id
+        """
         async with async_db_session.begin() as db:
             await superuser_verify(request)
             if not await user_dao.get(db, pk):
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             else:
                 if pk == request.user.id:
-                    raise errors.ForbiddenError(msg='禁止修改自身状态')
+                    raise errors.ForbiddenError(msg="자체 상태를 수정할 수 없습니다")
                 count = await user_dao.set_status(db, pk)
                 return count
 
@@ -187,22 +210,22 @@ class UserService:
         async with async_db_session.begin() as db:
             await superuser_verify(request)
             if not await user_dao.get(db, pk):
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다")
             else:
                 count = await user_dao.set_multi_login(db, pk)
                 token = await get_token(request)
                 user_id = request.user.id
                 latest_multi_login = await user_dao.get_multi_login(db, pk)
-                # TODO: 删除用户 refresh token, 此操作需要传参，暂时不考虑实现
-                # 当前用户修改自身时（普通/超级），除当前token外，其他token失效
+                # TODO: 사용자 refresh token 삭제, 이 작업은 매개변수가 필요하며 일단 구현하지 않음
+                # 현재 사용자가 자신을 수정할 때 (일반 / 슈퍼), 현재 토큰 이외의 다른 토큰은 모두 무효화됩니다.
                 if pk == user_id:
                     if not latest_multi_login:
-                        prefix = f'{settings.TOKEN_REDIS_PREFIX}:{pk}:'
+                        prefix = f"{settings.TOKEN_REDIS_PREFIX}:{pk}:"
                         await redis_client.delete_prefix(prefix, exclude=prefix + token)
-                # 超级用户修改他人时，他人token将全部失效
+                # 슈퍼 사용자가 다른 사람을 수정할 때, 다른 사람의 토큰은 모두 무효화됩니다.
                 else:
                     if not latest_multi_login:
-                        prefix = f'{settings.TOKEN_REDIS_PREFIX}:{pk}:'
+                        prefix = f"{settings.TOKEN_REDIS_PREFIX}:{pk}:"
                         await redis_client.delete_prefix(prefix)
                 return count
 
@@ -211,11 +234,11 @@ class UserService:
         async with async_db_session.begin() as db:
             input_user = await user_dao.get_by_username(db, username)
             if not input_user:
-                raise errors.NotFoundError(msg='用户不存在')
+                raise errors.NotFoundError(msg="사용자가 존재하지 않습니다.")
             count = await user_dao.delete(db, input_user.id)
             prefix = [
-                f'{settings.TOKEN_REDIS_PREFIX}:{input_user.id}:',
-                f'{settings.TOKEN_REFRESH_REDIS_PREFIX}:{input_user.id}:',
+                f"{settings.TOKEN_REDIS_PREFIX}:{input_user.id}:",
+                f"{settings.TOKEN_REFRESH_REDIS_PREFIX}:{input_user.id}:",
             ]
             for i in prefix:
                 await redis_client.delete_prefix(i)
@@ -223,3 +246,4 @@ class UserService:
 
 
 user_service: UserService = UserService()
+

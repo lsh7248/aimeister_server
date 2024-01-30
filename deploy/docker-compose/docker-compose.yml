@@ -52,7 +52,7 @@ services:
     environment:
       MYSQL_DATABASE: fba
       MYSQL_ROOT_PASSWORD: 123456
-      TZ: Asia/Shanghai
+      TZ: Asia/Seoul
     volumes:
       - fba_mysql:/var/lib/mysql
     networks:
@@ -70,7 +70,7 @@ services:
     container_name: fba_redis
     restart: always
     environment:
-      - TZ=Asia/Shanghai
+      - TZ=Asia/Seoul
     volumes:
       - fba_redis:/var/lib/redis
     networks:

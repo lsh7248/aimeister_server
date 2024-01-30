@@ -15,7 +15,10 @@ from backend.app.database.db_mysql import create_table
 from backend.app.middleware.jwt_auth_middleware import JwtAuthMiddleware
 from backend.app.middleware.opera_log_middleware import OperaLogMiddleware
 from backend.app.utils.demo_site import demo_site
-from backend.app.utils.health_check import ensure_unique_route_names, http_limit_callback
+from backend.app.utils.health_check import (
+    ensure_unique_route_names,
+    http_limit_callback,
+)
 from backend.app.utils.openapi import simplify_operation_ids
 from backend.app.utils.serializers import MsgSpecJSONResponse
 
@@ -23,22 +26,26 @@ from backend.app.utils.serializers import MsgSpecJSONResponse
 @asynccontextmanager
 async def register_init(app: FastAPI):
     """
-    启动初始化
+    초기화 시작
 
     :return:
     """
-    # 创建数据库表
+    # 데이터베이스 테이블 생성
     await create_table()
-    # 连接 redis
+    # Redis에 연결
     await redis_client.open()
-    # 初始化 limiter
-    await FastAPILimiter.init(redis_client, prefix=settings.LIMITER_REDIS_PREFIX, http_callback=http_limit_callback)
+    # 리미터 초기화
+    await FastAPILimiter.init(
+        redis_client,
+        prefix=settings.LIMITER_REDIS_PREFIX,
+        http_callback=http_limit_callback,
+    )
 
     yield
 
-    # 关闭 redis 连接
+    # Redis 연결 종료
     await redis_client.close()
-    # 关闭 limiter
+    # 리미터 종료
     await FastAPILimiter.close()
 
 
@@ -55,19 +62,19 @@ def register_app():
         lifespan=register_init,
     )
 
-    # 静态文件
+    # 정적 파일
     register_static_file(app)
 
-    # 中间件
+    # 미들웨어
     register_middleware(app)
 
-    # 路由
+    # 라우터
     register_router(app)
 
-    # 分页
+    # 페이지네이션
     register_page(app)
 
-    # 全局异常处理
+    # 전역 예외 처리
     register_exception(app)
 
     return app
@@ -75,7 +82,7 @@ def register_app():
 
 def register_static_file(app: FastAPI):
     """
-    静态文件交互开发模式, 生产使用 nginx 静态资源服务
+    정적 파일 개발 모드, 프로덕션에서는 Nginx 정적 리소스 서비스 사용
 
     :param app:
     :return:
@@ -85,50 +92,52 @@ def register_static_file(app: FastAPI):
 
         from fastapi.staticfiles import StaticFiles
 
-        if not os.path.exists('./static'):
-            os.mkdir('./static')
-        app.mount('/static', StaticFiles(directory='static'), name='static')
+        if not os.path.exists("./static"):
+            os.mkdir("./static")
+        app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def register_middleware(app: FastAPI):
     """
-    中间件，执行顺序从下往上
+    미들웨어, 아래에서 위로 실행
 
     :param app:
     :return:
     """
-    # Gzip: Always at the top
+    # Gzip: 항상 가장 위에
     if settings.MIDDLEWARE_GZIP:
         from fastapi.middleware.gzip import GZipMiddleware
 
         app.add_middleware(GZipMiddleware)
-    # Opera log
+    # Opera 로그
     app.add_middleware(OperaLogMiddleware)
-    # JWT auth, required
+    # JWT 인증, 필수
     app.add_middleware(
-        AuthenticationMiddleware, backend=JwtAuthMiddleware(), on_error=JwtAuthMiddleware.auth_exception_handler
+        AuthenticationMiddleware,
+        backend=JwtAuthMiddleware(),
+        on_error=JwtAuthMiddleware.auth_exception_handler,
     )
-    # Access log
+    # 접근 로그
     if settings.MIDDLEWARE_ACCESS:
         from backend.app.middleware.access_middleware import AccessMiddleware
 
         app.add_middleware(AccessMiddleware)
-    # CORS: Always at the end
+    # CORS: 항상 가장 아래에
     if settings.MIDDLEWARE_CORS:
         from fastapi.middleware.cors import CORSMiddleware
 
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=['*'],
+            allow_origins=["*"],
             allow_credentials=True,
-            allow_methods=['*'],
-            allow_headers=['*'],
+            allow_methods=["*"],
+            allow_headers=["*"],
         )
 
 
 def register_router(app: FastAPI):
     """
-    路由
+    라우터
 
     :param app: FastAPI
     :return:
@@ -138,14 +147,14 @@ def register_router(app: FastAPI):
     # API
     app.include_router(v1, dependencies=dependencies)
 
-    # Extra
+    # 추가
     ensure_unique_route_names(app)
     simplify_operation_ids(app)
 
 
 def register_page(app: FastAPI):
     """
-    分页查询
+    페이지네이션 쿼리
 
     :param app:
     :return:

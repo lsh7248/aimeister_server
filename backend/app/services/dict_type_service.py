@@ -10,7 +10,9 @@ from backend.app.schemas.dict_type import CreateDictTypeParam, UpdateDictTypePar
 
 class DictTypeService:
     @staticmethod
-    async def get_select(*, name: str = None, code: str = None, status: int = None) -> Select:
+    async def get_select(
+        *, name: str = None, code: str = None, status: int = None
+    ) -> Select:
         return await dict_type_dao.get_all(name=name, code=code, status=status)
 
     @staticmethod
@@ -18,7 +20,7 @@ class DictTypeService:
         async with async_db_session.begin() as db:
             dict_type = await dict_type_dao.get_by_code(db, obj.code)
             if dict_type:
-                raise errors.ForbiddenError(msg='字典类型已存在')
+                raise errors.ForbiddenError(msg="사전 유형이 이미 존재합니다.")
             await dict_type_dao.create(db, obj)
 
     @staticmethod
@@ -26,10 +28,10 @@ class DictTypeService:
         async with async_db_session.begin() as db:
             dict_type = await dict_type_dao.get(db, pk)
             if not dict_type:
-                raise errors.NotFoundError(msg='字典类型不存在')
+                raise errors.NotFoundError(msg="사전 유형이 존재하지 않습니다.")
             if dict_type.code != obj.code:
                 if await dict_type_dao.get_by_code(db, obj.code):
-                    raise errors.ForbiddenError(msg='字典类型已存在')
+                    raise errors.ForbiddenError(msg="사전 유형이 이미 존재합니다.")
             count = await dict_type_dao.update(db, pk, obj)
             return count
 

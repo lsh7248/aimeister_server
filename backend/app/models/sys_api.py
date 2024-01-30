@@ -9,12 +9,12 @@ from backend.app.models.base import Base, id_key
 
 
 class Api(Base):
-    """系统api"""
+    """시스템 API"""
 
-    __tablename__ = 'sys_api'
+    __tablename__ = "sys_api"
 
     id: Mapped[id_key] = mapped_column(init=False)
-    name: Mapped[str] = mapped_column(String(50), unique=True, comment='api名称')
-    method: Mapped[str] = mapped_column(String(16), comment='请求方法')
-    path: Mapped[str] = mapped_column(String(500), comment='api路径')
-    remark: Mapped[str | None] = mapped_column(LONGTEXT, comment='备注')
+    name: Mapped[str] = mapped_column(String(50), unique=True, comment="API 이름")
+    method: Mapped[str] = mapped_column(String(16), comment="요청 메서드")
+    path: Mapped[str] = mapped_column(String(500), comment="API 경로")
+    remark: Mapped[str | None] = mapped_column(LONGTEXT, comment="비고")

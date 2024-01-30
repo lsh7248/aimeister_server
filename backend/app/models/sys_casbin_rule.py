@@ -8,15 +8,15 @@ from backend.app.models.base import MappedBase, id_key
 
 
 class CasbinRule(MappedBase):
-    """重写 casbin 中的 CasbinRule model 类, 使用自定义 Base, 避免产生 alembic 迁移问题"""
+    """casbin의 CasbinRule 모델 클래스를 재정의하여 사용자 정의 Base를 사용하고 alembic 마이그레이션 문제를 피합니다."""
 
-    __tablename__ = 'sys_casbin_rule'
+    __tablename__ = "sys_casbin_rule"
 
     id: Mapped[id_key]
-    ptype: Mapped[str] = mapped_column(String(255), comment='策略类型: p / g')
-    v0: Mapped[str] = mapped_column(String(255), comment='角色ID / 用户uuid')
-    v1: Mapped[str] = mapped_column(LONGTEXT, comment='api路径 / 角色名称')
-    v2: Mapped[str | None] = mapped_column(String(255), comment='请求方法')
+    ptype: Mapped[str] = mapped_column(String(255), comment="정책 유형: p / g")
+    v0: Mapped[str] = mapped_column(String(255), comment="역할 ID / 사용자 UUID")
+    v1: Mapped[str] = mapped_column(LONGTEXT, comment="API 경로 / 역할 이름")
+    v2: Mapped[str | None] = mapped_column(String(255), comment="요청 메서드")
     v3: Mapped[str | None] = mapped_column(String(255))
     v4: Mapped[str | None] = mapped_column(String(255))
     v5: Mapped[str | None] = mapped_column(String(255))
@@ -27,7 +27,7 @@ class CasbinRule(MappedBase):
             if v is None:
                 break
             arr.append(v)
-        return ', '.join(arr)
+        return ", ".join(arr)
 
     def __repr__(self):
         return '<CasbinRule {}: "{}">'.format(self.id, str(self))

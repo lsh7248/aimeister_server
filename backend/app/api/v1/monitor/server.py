@@ -12,20 +12,20 @@ router = APIRouter()
 
 
 @router.get(
-    '/server',
-    summary='server 监控',
+    "/server",
+    summary="server 감시 장치",
     dependencies=[
-        Depends(RequestPermission('sys:monitor:server')),
+        Depends(RequestPermission("sys:monitor:server")),
         DependsJwtAuth,
     ],
 )
 async def get_server_info() -> ResponseModel:
-    """IO密集型任务，使用线程池尽量减少性能损耗"""
+    """IO 집약적인 작업의 경우 스레드 풀을 사용하여 성능 손실을 최소화합니다."""
     data = {
-        'cpu': await run_in_threadpool(server_info.get_cpu_info),
-        'mem': await run_in_threadpool(server_info.get_mem_info),
-        'sys': await run_in_threadpool(server_info.get_sys_info),
-        'disk': await run_in_threadpool(server_info.get_disk_info),
-        'service': await run_in_threadpool(server_info.get_service_info),
+        "cpu": await run_in_threadpool(server_info.get_cpu_info),
+        "mem": await run_in_threadpool(server_info.get_mem_info),
+        "sys": await run_in_threadpool(server_info.get_sys_info),
+        "disk": await run_in_threadpool(server_info.get_disk_info),
+        "service": await run_in_threadpool(server_info.get_service_info),
     }
     return await response_base.success(data=data)

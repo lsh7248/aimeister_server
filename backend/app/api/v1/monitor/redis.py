@@ -11,13 +11,13 @@ router = APIRouter()
 
 
 @router.get(
-    '/redis',
-    summary='redis 监控',
+    "/redis",
+    summary="redis 감시 장치",
     dependencies=[
-        Depends(RequestPermission('sys:monitor:redis')),
+        Depends(RequestPermission("sys:monitor:redis")),
         DependsJwtAuth,
     ],
 )
 async def get_redis_info() -> ResponseModel:
-    data = {'info': await redis_info.get_info(), 'stats': await redis_info.get_stats()}
+    data = {"info": await redis_info.get_info(), "stats": await redis_info.get_stats()}
     return await response_base.success(data=data)

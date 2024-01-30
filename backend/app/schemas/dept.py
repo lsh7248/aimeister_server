@@ -10,8 +10,8 @@ from backend.app.schemas.base import CustomEmailStr, CustomPhoneNumber, SchemaBa
 
 class DeptSchemaBase(SchemaBase):
     name: str
-    parent_id: int | None = Field(default=None, description='部门父级ID')
-    sort: int = Field(default=0, ge=0, description='排序')
+    parent_id: int | None = Field(default=None, description="부서 상위 ID")
+    sort: int = Field(default=0, ge=0, description="정렬")
     leader: str | None = None
     phone: CustomPhoneNumber | None = None
     email: CustomEmailStr | None = None

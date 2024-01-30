@@ -10,14 +10,18 @@ from backend.app.common.permission import RequestPermission
 from backend.app.common.rbac import DependsRBAC
 from backend.app.common.response.response_schema import ResponseModel, response_base
 from backend.app.database.db_mysql import CurrentSession
-from backend.app.schemas.dict_data import CreateDictDataParam, GetDictDataListDetails, UpdateDictDataParam
+from backend.app.schemas.dict_data import (
+    CreateDictDataParam,
+    GetDictDataListDetails,
+    UpdateDictDataParam,
+)
 from backend.app.services.dict_data_service import dict_data_service
 from backend.app.utils.serializers import select_as_dict
 
 router = APIRouter()
 
 
-@router.get('/{pk}', summary='获取字典详情', dependencies=[DependsJwtAuth])
+@router.get("/{pk}", summary="사전 세부 정보 가져오기", dependencies=[DependsJwtAuth])
 async def get_dict_data(pk: Annotated[int, Path(...)]) -> ResponseModel:
     dict_data = await dict_data_service.get(pk=pk)
     data = GetDictDataListDetails(**await select_as_dict(dict_data))
@@ -25,8 +29,8 @@ async def get_dict_data(pk: Annotated[int, Path(...)]) -> ResponseModel:
 
 
 @router.get(
-    '',
-    summary='（模糊条件）分页获取所有字典',
+    "",
+    summary="(모호한 조건) 페이지별로 모든 사전 가져오기",
     dependencies=[
         DependsJwtAuth,
         DependsPagination,
@@ -38,16 +42,18 @@ async def get_pagination_dict_datas(
     value: Annotated[str | None, Query()] = None,
     status: Annotated[int | None, Query()] = None,
 ) -> ResponseModel:
-    dict_data_select = await dict_data_service.get_select(label=label, value=value, status=status)
+    dict_data_select = await dict_data_service.get_select(
+        label=label, value=value, status=status
+    )
     page_data = await paging_data(db, dict_data_select, GetDictDataListDetails)
     return await response_base.success(data=page_data)
 
 
 @router.post(
-    '',
-    summary='创建字典',
+    "",
+    summary="사전 생성",
     dependencies=[
-        Depends(RequestPermission('sys:dict:data:add')),
+        Depends(RequestPermission("sys:dict:data:add")),
         DependsRBAC,
     ],
 )
@@ -57,14 +63,16 @@ async def create_dict_data(obj: CreateDictDataParam) -> ResponseModel:
 
 
 @router.put(
-    '/{pk}',
-    summary='更新字典',
+    "/{pk}",
+    summary="사전 업데이트",
     dependencies=[
-        Depends(RequestPermission('sys:dict:data:edit')),
+        Depends(RequestPermission("sys:dict:data:edit")),
         DependsRBAC,
     ],
 )
-async def update_dict_data(pk: Annotated[int, Path(...)], obj: UpdateDictDataParam) -> ResponseModel:
+async def update_dict_data(
+    pk: Annotated[int, Path(...)], obj: UpdateDictDataParam
+) -> ResponseModel:
     count = await dict_data_service.update(pk=pk, obj=obj)
     if count > 0:
         return await response_base.success()
@@ -72,10 +80,10 @@ async def update_dict_data(pk: Annotated[int, Path(...)], obj: UpdateDictDataPar
 
 
 @router.delete(
-    '',
-    summary='（批量）删除字典',
+    "",
+    summary="(일괄) 사전 삭제",
     dependencies=[
-        Depends(RequestPermission('sys:dict:data:del')),
+        Depends(RequestPermission("sys:dict:data:del")),
         DependsRBAC,
     ],
 )

@@ -10,8 +10,8 @@ from backend.app.schemas.base import SchemaBase
 
 class ApiSchemaBase(SchemaBase):
     name: str
-    method: MethodType = Field(default=MethodType.GET, description='请求方法')
-    path: str = Field(..., description='api路径')
+    method: MethodType = Field(default=MethodType.GET, description="요청 방법")
+    path: str = Field(..., description="api路径")
     remark: str | None = None
 
 

@@ -9,7 +9,10 @@ from starlette.middleware.cors import CORSMiddleware
 
 from backend.app.common.exception.errors import BaseExceptionMixin
 from backend.app.common.log import log
-from backend.app.common.response.response_code import CustomResponseCode, StandardResponseCode
+from backend.app.common.response.response_code import (
+    CustomResponseCode,
+    StandardResponseCode,
+)
 from backend.app.common.response.response_schema import response_base
 from backend.app.core.conf import settings
 from backend.app.schemas.base import (
@@ -19,44 +22,50 @@ from backend.app.schemas.base import (
 from backend.app.utils.serializers import MsgSpecJSONResponse
 
 
-async def _validation_exception_handler(request: Request, e: RequestValidationError | ValidationError):
+async def _validation_exception_handler(
+    request: Request, e: RequestValidationError | ValidationError
+):
     """
-    数据验证异常处理
+    데이터 유효성 검증 예외 처리
 
     :param e:
     :return:
     """
     errors = []
     for error in e.errors():
-        custom_message = CUSTOM_VALIDATION_ERROR_MESSAGES.get(error['type'])
+        custom_message = CUSTOM_VALIDATION_ERROR_MESSAGES.get(error["type"])
         if custom_message:
-            ctx = error.get('ctx')
+            ctx = error.get("ctx")
             if not ctx:
-                error['msg'] = custom_message
+                error["msg"] = custom_message
             else:
-                error['msg'] = custom_message.format(**ctx)
-                ctx_error = ctx.get('error')
+                error["msg"] = custom_message.format(**ctx)
+                ctx_error = ctx.get("error")
                 if ctx_error:
-                    error['ctx']['error'] = (
-                        ctx_error.__str__().replace("'", '"') if isinstance(ctx_error, Exception) else None
+                    error["ctx"]["error"] = (
+                        ctx_error.__str__().replace("'", '"')
+                        if isinstance(ctx_error, Exception)
+                        else None
                     )
         errors.append(error)
     error = errors[0]
-    if error.get('type') == 'json_invalid':
-        message = 'json解析失败'
+    if error.get("type") == "json_invalid":
+        message = "json 분석 실패"
     else:
-        error_input = error.get('input')
-        field = str(error.get('loc')[-1])
-        error_msg = error.get('msg')
-        message = f'{field} {error_msg}，输入：{error_input}'
-    msg = f'请求参数非法: {message}'
-    data = {'errors': errors} if settings.ENVIRONMENT == 'dev' else None
+        error_input = error.get("input")
+        field = str(error.get("loc")[-1])
+        error_msg = error.get("msg")
+        message = f"{field} {error_msg}，입력：{error_input}"
+    msg = f"요청 매개변수가 잘못되었습니다: {message}"
+    data = {"errors": errors} if settings.ENVIRONMENT == "dev" else None
     content = {
-        'code': StandardResponseCode.HTTP_422,
-        'msg': msg,
-        'data': data,
+        "code": StandardResponseCode.HTTP_422,
+        "msg": msg,
+        "data": data,
     }
-    request.state.__request_validation_exception__ = content  # 用于在中间件中获取异常信息
+    request.state.__request_validation_exception__ = (
+        content  # 미들웨어에서 예외 정보를 얻기 위해 사용
+    )
     return MsgSpecJSONResponse(status_code=422, content=content)
 
 
@@ -64,22 +73,24 @@ def register_exception(app: FastAPI):
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
         """
-        全局HTTP异常处理
+        전역 HTTP 예외 처리
 
         :param request:
         :param exc:
         :return:
         """
-        if settings.ENVIRONMENT == 'dev':
+        if settings.ENVIRONMENT == "dev":
             content = {
-                'code': exc.status_code,
-                'msg': exc.detail,
-                'data': None,
+                "code": exc.status_code,
+                "msg": exc.detail,
+                "data": None,
             }
         else:
             res = await response_base.fail(res=CustomResponseCode.HTTP_400)
             content = res.model_dump()
-        request.state.__request_http_exception__ = content  # 用于在中间件中获取异常信息
+        request.state.__request_http_exception__ = (
+            content  # 미들웨어에서 예외 정보를 얻기 위해 사용
+        )
         return MsgSpecJSONResponse(
             status_code=StandardResponseCode.HTTP_400,
             content=content,
@@ -87,9 +98,11 @@ def register_exception(app: FastAPI):
         )
 
     @app.exception_handler(RequestValidationError)
-    async def fastapi_validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def fastapi_validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ):
         """
-        fastapi 数据验证异常处理
+        fastapi 데이터 유효성 검증 예외 처리
 
         :param request:
         :param exc:
@@ -98,9 +111,11 @@ def register_exception(app: FastAPI):
         return await _validation_exception_handler(request, exc)
 
     @app.exception_handler(ValidationError)
-    async def pydantic_validation_exception_handler(request: Request, exc: ValidationError):
+    async def pydantic_validation_exception_handler(
+        request: Request, exc: ValidationError
+    ):
         """
-        pydantic 数据验证异常处理
+        pydantic 데이터 유효성 검증 예외 처리
 
         :param request:
         :param exc:
@@ -111,7 +126,7 @@ def register_exception(app: FastAPI):
     @app.exception_handler(PydanticUserError)
     async def pydantic_user_error_handler(request: Request, exc: PydanticUserError):
         """
-        Pydantic 用户异常处理
+        Pydantic 사용자 예외 처리
 
         :param request:
         :param exc:
@@ -120,26 +135,26 @@ def register_exception(app: FastAPI):
         return MsgSpecJSONResponse(
             status_code=StandardResponseCode.HTTP_500,
             content={
-                'code': StandardResponseCode.HTTP_500,
-                'msg': CUSTOM_USAGE_ERROR_MESSAGES.get(exc.code),
-                'data': None,
+                "code": StandardResponseCode.HTTP_500,
+                "msg": CUSTOM_USAGE_ERROR_MESSAGES.get(exc.code),
+                "data": None,
             },
         )
 
     @app.exception_handler(AssertionError)
     async def assertion_error_handler(request: Request, exc: AssertionError):
         """
-        断言错误处理
+        단언문 오류 처리
 
         :param request:
         :param exc:
         :return:
         """
-        if settings.ENVIRONMENT == 'dev':
+        if settings.ENVIRONMENT == "dev":
             content = {
-                'code': StandardResponseCode.HTTP_500,
-                'msg': str(''.join(exc.args) if exc.args else exc.__doc__),
-                'data': None,
+                "code": StandardResponseCode.HTTP_500,
+                "msg": str("".join(exc.args) if exc.args else exc.__doc__),
+                "data": None,
             }
         else:
             res = await response_base.fail(res=CustomResponseCode.HTTP_500)
@@ -152,7 +167,7 @@ def register_exception(app: FastAPI):
     @app.exception_handler(Exception)
     async def all_exception_handler(request: Request, exc: Exception):
         """
-        全局异常处理
+        전역 예외 처리
 
         :param request:
         :param exc:
@@ -162,36 +177,38 @@ def register_exception(app: FastAPI):
             return MsgSpecJSONResponse(
                 status_code=StandardResponseCode.HTTP_400,
                 content={
-                    'code': exc.code,
-                    'msg': str(exc.msg),
-                    'data': exc.data if exc.data else None,
+                    "code": exc.code,
+                    "msg": str(exc.msg),
+                    "data": exc.data if exc.data else None,
                 },
                 background=exc.background,
             )
         else:
             import traceback
 
-            log.error(f'未知异常: {exc}')
+            log.error(f"알 수 없는 예외: {exc}")
             log.error(traceback.format_exc())
-            if settings.ENVIRONMENT == 'dev':
+            if settings.ENVIRONMENT == "dev":
                 content = {
-                    'code': 500,
-                    'msg': str(exc),
-                    'data': None,
+                    "code": 500,
+                    "msg": str(exc),
+                    "data": None,
                 }
             else:
                 res = await response_base.fail(res=CustomResponseCode.HTTP_500)
                 content = res.model_dump()
-            return MsgSpecJSONResponse(status_code=StandardResponseCode.HTTP_500, content=content)
+            return MsgSpecJSONResponse(
+                status_code=StandardResponseCode.HTTP_500, content=content
+            )
 
     if settings.MIDDLEWARE_CORS:
 
         @app.exception_handler(StandardResponseCode.HTTP_500)
         async def cors_status_code_500_exception_handler(request, exc):
             """
-            跨域 500 异常处理
+            CORS 500 예외 처리
 
-            `Related issue <https://github.com/encode/starlette/issues/1175>`_
+            `관련 이슈 <https://github.com/encode/starlette/issues/1175>`_
 
             :param request:
             :param exc:
@@ -199,39 +216,47 @@ def register_exception(app: FastAPI):
             """
             if isinstance(exc, BaseExceptionMixin):
                 content = {
-                    'code': exc.code,
-                    'msg': exc.msg,
-                    'data': exc.data,
+                    "code": exc.code,
+                    "msg": exc.msg,
+                    "data": exc.data,
                 }
             else:
-                if settings.ENVIRONMENT == 'dev':
+                if settings.ENVIRONMENT == "dev":
                     content = {
-                        'code': StandardResponseCode.HTTP_500,
-                        'msg': str(exc),
-                        'data': None,
+                        "code": StandardResponseCode.HTTP_500,
+                        "msg": str(exc),
+                        "data": None,
                     }
                 else:
                     res = await response_base.fail(res=CustomResponseCode.HTTP_500)
                     content = res.model_dump()
             response = MsgSpecJSONResponse(
-                status_code=exc.code if isinstance(exc, BaseExceptionMixin) else StandardResponseCode.HTTP_500,
+                status_code=(
+                    exc.code
+                    if isinstance(exc, BaseExceptionMixin)
+                    else StandardResponseCode.HTTP_500
+                ),
                 content=content,
-                background=exc.background if isinstance(exc, BaseExceptionMixin) else None,
+                background=(
+                    exc.background if isinstance(exc, BaseExceptionMixin) else None
+                ),
             )
-            origin = request.headers.get('origin')
+            origin = request.headers.get("origin")
             if origin:
                 cors = CORSMiddleware(
                     app=app,
-                    allow_origins=['*'],
+                    allow_origins=["*"],
                     allow_credentials=True,
-                    allow_methods=['*'],
-                    allow_headers=['*'],
+                    allow_methods=["*"],
+                    allow_headers=["*"],
                 )
                 response.headers.update(cors.simple_headers)
-                has_cookie = 'cookie' in request.headers
+                has_cookie = "cookie" in request.headers
                 if cors.allow_all_origins and has_cookie:
-                    response.headers['Access-Control-Allow-Origin'] = origin
-                elif not cors.allow_all_origins and cors.is_allowed_origin(origin=origin):
-                    response.headers['Access-Control-Allow-Origin'] = origin
-                    response.headers.add_vary_header('Origin')
+                    response.headers["Access-Control-Allow-Origin"] = origin
+                elif not cors.allow_all_origins and cors.is_allowed_origin(
+                    origin=origin
+                ):
+                    response.headers["Access-Control-Allow-Origin"] = origin
+                    response.headers.add_vary_header("Origin")
             return response

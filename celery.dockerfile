@@ -14,7 +14,7 @@ RUN apt-get update \
 RUN pip install --upgrade pip -i https://mirrors.aliyun.com/pypi/simple \
     && pip install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
 
-ENV TZ = Asia/Shanghai
+ENV TZ = Asia/Seoul
 
 RUN mkdir -p /var/log/celery
 

@@ -17,8 +17,8 @@ router = APIRouter()
 
 
 @router.get(
-    '',
-    summary='（模糊条件）分页获取登录日志',
+    "",
+    summary="（模糊条件）分页获取登录日志",
     dependencies=[
         DependsJwtAuth,
         DependsPagination,
@@ -30,16 +30,18 @@ async def get_pagination_login_logs(
     status: Annotated[int | None, Query()] = None,
     ip: Annotated[str | None, Query()] = None,
 ) -> ResponseModel:
-    log_select = await login_log_service.get_select(username=username, status=status, ip=ip)
+    log_select = await login_log_service.get_select(
+        username=username, status=status, ip=ip
+    )
     page_data = await paging_data(db, log_select, GetLoginLogListDetails)
     return await response_base.success(data=page_data)
 
 
 @router.delete(
-    '',
-    summary='（批量）删除登录日志',
+    "",
+    summary="（일괄적으로）로그인 로그 삭제",
     dependencies=[
-        Depends(RequestPermission('log:login:del')),
+        Depends(RequestPermission("log:login:del")),
         DependsRBAC,
     ],
 )
@@ -51,10 +53,10 @@ async def delete_login_log(pk: Annotated[list[int], Query(...)]) -> ResponseMode
 
 
 @router.delete(
-    '/all',
-    summary='清空登录日志',
+    "/all",
+    summary="로그인 로그 모두 삭제",
     dependencies=[
-        Depends(RequestPermission('log:login:empty')),
+        Depends(RequestPermission("log:login:empty")),
         DependsRBAC,
     ],
 )

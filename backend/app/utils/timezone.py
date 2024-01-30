@@ -13,7 +13,7 @@ class TimeZone:
 
     def now(self) -> datetime:
         """
-        获取时区时间
+        시간대 시간 가져오기
 
         :return:
         """
@@ -21,16 +21,18 @@ class TimeZone:
 
     def f_datetime(self, dt: datetime) -> datetime:
         """
-        datetime 时间转时区时间
+        datetime 시간을 시간대 시간으로 변환하기
 
         :param dt:
         :return:
         """
         return dt.astimezone(self.tz_info)
 
-    def f_str(self, date_str: str, format_str: str = settings.DATETIME_FORMAT) -> datetime:
+    def f_str(
+        self, date_str: str, format_str: str = settings.DATETIME_FORMAT
+    ) -> datetime:
         """
-        时间字符串转时区时间
+        시간 문자열을 시간대 시간으로 변환하기
 
         :param date_str:
         :param format_str:

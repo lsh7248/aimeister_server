@@ -3,40 +3,55 @@
 from datetime import datetime
 from typing import Annotated
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, declared_attr, mapped_column
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    declared_attr,
+    mapped_column,
+)
 
 from backend.app.utils.timezone import timezone
 
-# 通用 Mapped 类型主键, 需手动添加，参考以下使用方式
+# 공통 Mapped 타입 Primary Key, 수동으로 추가해야 함. 아래 사용 예시 참조
 # MappedBase -> id: Mapped[id_key]
 # DataClassBase && Base -> id: Mapped[id_key] = mapped_column(init=False)
 id_key = Annotated[
-    int, mapped_column(primary_key=True, index=True, autoincrement=True, sort_order=-999, comment='主键id')
+    int,
+    mapped_column(
+        primary_key=True,
+        index=True,
+        autoincrement=True,
+        sort_order=-999,
+        comment="주 키 id",
+    ),
 ]
 
 
-# Mixin: 一种面向对象编程概念, 使结构变得更加清晰, `Wiki <https://en.wikipedia.org/wiki/Mixin/>`__
+# Mixin: 객체 지향 프로그래밍 개념으로, 구조를 더 명확하게 만들어줌, `위키 <https://en.wikipedia.org/wiki/Mixin/>`__
 class UserMixin(MappedAsDataclass):
-    """用户 Mixin 数据类"""
+    """사용자 Mixin 데이터 클래스"""
 
-    create_user: Mapped[int] = mapped_column(sort_order=998, comment='创建者')
-    update_user: Mapped[int | None] = mapped_column(init=False, default=None, sort_order=998, comment='修改者')
+    create_user: Mapped[int] = mapped_column(sort_order=998, comment="생성자")
+    update_user: Mapped[int | None] = mapped_column(
+        init=False, default=None, sort_order=998, comment="수정자"
+    )
 
 
 class DateTimeMixin(MappedAsDataclass):
-    """日期时间 Mixin 数据类"""
+    """날짜시간 Mixin 데이터 클래스"""
 
     created_time: Mapped[datetime] = mapped_column(
-        init=False, default_factory=timezone.now, sort_order=999, comment='创建时间'
+        init=False, default_factory=timezone.now, sort_order=999, comment="생성 시간"
     )
     updated_time: Mapped[datetime | None] = mapped_column(
-        init=False, onupdate=timezone.now, sort_order=999, comment='更新时间'
+        init=False, onupdate=timezone.now, sort_order=999, comment="수정 시간"
     )
 
 
 class MappedBase(DeclarativeBase):
     """
-    声明性基类, 原始 DeclarativeBase 类, 作为所有基类或数据模型类的父类而存在
+    선언적 기본 클래스, 원래의 DeclarativeBase 클래스, 기본 클래스 또는 데이터 모델 클래스의 부모로 사용됨
 
     `DeclarativeBase <https://docs.sqlalchemy.org/en/20/orm/declarative_config.html>`__
     `mapped_column() <https://docs.sqlalchemy.org/en/20/orm/mapping_api.html#sqlalchemy.orm.mapped_column>`__
@@ -49,7 +64,7 @@ class MappedBase(DeclarativeBase):
 
 class DataClassBase(MappedAsDataclass, MappedBase):
     """
-    声明性数据类基类, 它将带有数据类集成, 允许使用更高级配置, 但你必须注意它的一些特性, 尤其是和 DeclarativeBase 一起使用时
+    선언적 데이터 클래스 기본 클래스, 데이터 클래스를 통합하여 더 고급 구성을 사용할 수 있도록 함. 특히 DeclarativeBase와 함께 사용할 때 주의해야 함
 
     `MappedAsDataclass <https://docs.sqlalchemy.org/en/20/orm/dataclasses.html#orm-declarative-native-dataclasses>`__
     """  # noqa: E501
@@ -59,7 +74,7 @@ class DataClassBase(MappedAsDataclass, MappedBase):
 
 class Base(DataClassBase, DateTimeMixin):
     """
-    声明性 Mixin 数据类基类, 带有数据类集成, 并包含 MiXin 数据类基础表结构, 你可以简单的理解它为含有基础表结构的数据类基类
+    선언적 Mixin 데이터 클래스 기본 클래스, 데이터 클래스를 통합하고 MiXin 데이터 클래스 기본 테이블 구조를 포함하고 있는 기본 클래스로 이해할 수 있음
     """  # noqa: E501
 
     __abstract__ = True

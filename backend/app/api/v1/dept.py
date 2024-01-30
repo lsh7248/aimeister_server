@@ -8,36 +8,42 @@ from backend.app.common.jwt import DependsJwtAuth
 from backend.app.common.permission import RequestPermission
 from backend.app.common.rbac import DependsRBAC
 from backend.app.common.response.response_schema import ResponseModel, response_base
-from backend.app.schemas.dept import CreateDeptParam, GetDeptListDetails, UpdateDeptParam
+from backend.app.schemas.dept import (
+    CreateDeptParam,
+    GetDeptListDetails,
+    UpdateDeptParam,
+)
 from backend.app.services.dept_service import dept_service
 from backend.app.utils.serializers import select_as_dict
 
 router = APIRouter()
 
 
-@router.get('/{pk}', summary='获取部门详情', dependencies=[DependsJwtAuth])
+@router.get("/{pk}", summary="부서 상세 정보 가져오기", dependencies=[DependsJwtAuth])
 async def get_dept(pk: Annotated[int, Path(...)]) -> ResponseModel:
     dept = await dept_service.get(pk=pk)
     data = GetDeptListDetails(**await select_as_dict(dept))
     return await response_base.success(data=data)
 
 
-@router.get('', summary='获取所有部门展示树', dependencies=[DependsJwtAuth])
+@router.get("", summary="모든 부서 트리 가져오기", dependencies=[DependsJwtAuth])
 async def get_all_depts_tree(
     name: Annotated[str | None, Query()] = None,
     leader: Annotated[str | None, Query()] = None,
     phone: Annotated[str | None, Query()] = None,
     status: Annotated[int | None, Query()] = None,
 ) -> ResponseModel:
-    dept = await dept_service.get_dept_tree(name=name, leader=leader, phone=phone, status=status)
+    dept = await dept_service.get_dept_tree(
+        name=name, leader=leader, phone=phone, status=status
+    )
     return await response_base.success(data=dept)
 
 
 @router.post(
-    '',
-    summary='创建部门',
+    "",
+    summary="부서 생성",
     dependencies=[
-        Depends(RequestPermission('sys:dept:add')),
+        Depends(RequestPermission("sys:dept:add")),
         DependsRBAC,
     ],
 )
@@ -47,14 +53,16 @@ async def create_dept(obj: CreateDeptParam) -> ResponseModel:
 
 
 @router.put(
-    '/{pk}',
-    summary='更新部门',
+    "/{pk}",
+    summary="부서 수정",
     dependencies=[
-        Depends(RequestPermission('sys:dept:edit')),
+        Depends(RequestPermission("sys:dept:edit")),
         DependsRBAC,
     ],
 )
-async def update_dept(pk: Annotated[int, Path(...)], obj: UpdateDeptParam) -> ResponseModel:
+async def update_dept(
+    pk: Annotated[int, Path(...)], obj: UpdateDeptParam
+) -> ResponseModel:
     count = await dept_service.update(pk=pk, obj=obj)
     if count > 0:
         return await response_base.success()
@@ -62,10 +70,10 @@ async def update_dept(pk: Annotated[int, Path(...)], obj: UpdateDeptParam) -> Re
 
 
 @router.delete(
-    '/{pk}',
-    summary='删除部门',
+    "/{pk}",
+    summary="부서 삭제",
     dependencies=[
-        Depends(RequestPermission('sys:dept:del')),
+        Depends(RequestPermission("sys:dept:del")),
         DependsRBAC,
     ],
 )

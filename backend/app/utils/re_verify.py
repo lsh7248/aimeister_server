@@ -1,11 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import re
-
-
 def search_string(pattern, text) -> bool:
     """
-    全字段正则匹配
+    전체 필드 정규식 일치
 
     :param pattern:
     :param text:
@@ -20,7 +15,7 @@ def search_string(pattern, text) -> bool:
 
 def match_string(pattern, text) -> bool:
     """
-    从字段开头正则匹配
+    필드 시작 정규식 일치
 
     :param pattern:
     :param text:
@@ -35,9 +30,9 @@ def match_string(pattern, text) -> bool:
 
 def is_phone(text: str) -> bool:
     """
-    检查手机号码
+    핸드폰 번호 확인
 
     :param text:
     :return:
     """
-    return match_string(r'^1[3-9]\d{9}$', text)
+    return match_string(r"^1[3-9]\d{9}$", text)
